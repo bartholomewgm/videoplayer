@@ -1,3 +1,7 @@
+"""
+Глобальные стили приложения (CSS)
+"""
+
 STYLE = """
 QMainWindow {
     background-color: #000000;
@@ -45,10 +49,5 @@ QScrollBar::handle:vertical {
 
 QScrollBar::handle:vertical:hover {
     background: rgba(255, 255, 255, 0.5);
-}
-
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    border: none;
-    background: none;
 }
 """

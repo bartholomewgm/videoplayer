@@ -1,8 +1,13 @@
+"""
+Модуль управления историей просмотров (SQLite)
+"""
+
 import sqlite3
 from pathlib import Path
 
 
 class HistoryManager:
+    """Управление историей просмотров"""
 
     def __init__(self):
         Path("database").mkdir(exist_ok=True)
@@ -11,6 +16,7 @@ class HistoryManager:
         self.create_table()
 
     def create_table(self):
+        """Создаёт таблицу в БД"""
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,27 +29,25 @@ class HistoryManager:
 
     def save_video(self, file_path, position):
         """Сохраняет или обновляет позицию видео"""
-        # Сначала пробуем обновить существующую запись
+        # Сначала пытаемся обновить
         self.cursor.execute("""
             UPDATE history 
             SET position = ?, last_opened = CURRENT_TIMESTAMP
             WHERE file_path = ?
         """, (position, file_path))
-
-        # Если ничего не обновилось (записи нет), то вставляем новую
+        
+        # Если ничего не обновилось — вставляем новую запись
         if self.cursor.rowcount == 0:
             self.cursor.execute("""
                 INSERT INTO history (file_path, position, last_opened)
                 VALUES (?, ?, CURRENT_TIMESTAMP)
             """, (file_path, position))
-
+        
         self.connection.commit()
 
     def get_position(self, file_path):
         """Получает сохранённую позицию для видео"""
-        self.cursor.execute("""
-            SELECT position FROM history WHERE file_path = ?
-        """, (file_path,))
+        self.cursor.execute("SELECT position FROM history WHERE file_path = ?", (file_path,))
         result = self.cursor.fetchone()
         return result[0] if result else 0
 
@@ -55,23 +59,9 @@ class HistoryManager:
         """)
         return self.cursor.fetchone()
 
-    def get_history(self):
-        """Возвращает всю историю"""
-        self.cursor.execute("""
-            SELECT file_path, position, last_opened FROM history
-            ORDER BY last_opened DESC
-        """)
-        return self.cursor.fetchall()
-
     def clear_history(self):
         """Очищает историю"""
         self.cursor.execute("DELETE FROM history")
-        self.connection.commit()
-
-    def remove_video(self, file_path):
-        """Удаляет конкретное видео из истории"""
-        self.cursor.execute(
-            "DELETE FROM history WHERE file_path = ?", (file_path,))
         self.connection.commit()
 
     def close(self):
